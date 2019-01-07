@@ -1,6 +1,6 @@
 <template>
-  <div class="view-rank">
-rank
+  <div class="view-singer">
+singer
   </div>
 </template>
 
