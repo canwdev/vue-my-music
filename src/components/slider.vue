@@ -65,7 +65,6 @@
 
         for (let i=0; i<this.children.length; i++) {
           let child = this.children[i]
-          console.log(child)
 
           addClass(child, 'slider-item')
 
@@ -117,6 +116,11 @@
           this.slider.next()
         }, this.interval)
       }
+    },
+    destroyed() {
+      console.log('destroyed')
+      // 当组件被销毁时，清除计时器
+      clearTimeout(this.timer)
     }
   }
 </script>
