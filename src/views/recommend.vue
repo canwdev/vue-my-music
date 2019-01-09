@@ -1,6 +1,6 @@
 <template>
   <div class="view-recommend">
-    <div class="slider-wrap">
+    <div v-if="recommends.length" class="slider-wrap">
       <slider>
         <a :href="item.linkUrl" target="_blank" v-for="(item, index) in recommends" :key="index">
           <img :src="item.picUrl">
@@ -42,4 +42,7 @@
 
 <style lang="stylus" scoped>
   @import "../assets/css/theme.styl"
+  .view-recommend
+    .slider-wrap
+      overflow: hidden
 </style>
