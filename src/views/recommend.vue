@@ -20,11 +20,22 @@
       </a>
     </div>
 
+    <h4 class="recommend-title">歌单推荐</h4>
+    <div class="songlist-wrap">
+      <a href="javascript:void(0)" class="songlist-item" v-for="(item, index) in recommends.songList" :key="index">
+        <div class="song-img">
+          <img :src="item.picUrl">
+        </div>
+        <div class="song-info">
+          <p>{{item.songListDesc}}</p>
+        </div>
+      </a>
+    </div>
   </div>
 </template>
 
 <script>
-  import {getRecommend} from "../api/recommend"
+  import {getRecommend, getSongList} from "../api/recommend"
   import {CODES} from "../api/config"
   import slider from "../components/slider"
 
@@ -39,6 +50,7 @@
     },
     created() {
       this._getRecommend()
+      this._getSongList()
     },
     methods: {
       // 获取推荐轮播图
@@ -47,6 +59,11 @@
           if (res.code === CODES.ERR_OK) {
             this.recommends = res.data
           }
+        })
+      },
+      _getSongList () {
+        getSongList().then((res) => {
+          console.log(res)
         })
       }
     }
@@ -95,5 +112,6 @@
       font-size $font-l
       padding 20px
       box-sizing border-boxx
-      color: $color-sub-theme
+      color $color-sub-theme
+      text-align center
 </style>
