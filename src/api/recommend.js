@@ -20,9 +20,9 @@ export function getRecommend() {
 /**
  * 获取QQ音乐PC版歌单
  */
-export function getSongList() {
+export function getDiscList() {
   // 必须需要devServer服务端获取数据
-  const url = '/api/getSongList'
+  const url = '/api/getDiscList'
 
   const data = Object.assign({}, commonParams, {
     platform: 'yqq',

@@ -23,6 +23,7 @@
     height 45px
     background $color-bg-dark
     margin-top -1px
+    transition all .5s
     .tab-item
       color $color-text
       flex 1
