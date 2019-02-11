@@ -1,6 +1,5 @@
 <template>
   <div class="view-recommend">
-    <loading v-show="!fullLoaded"></loading>
     <div v-if="recommends.slider" class="slider-wrap">
       <slider>
         <a :href="item.linkUrl" target="_blank" v-for="(item, index) in recommends.slider" :key="index">
@@ -9,8 +8,22 @@
       </slider>
     </div>
 
-    <div v-show="fullLoaded">
+    <h4 class="recommend-title">歌单推荐(Mobile)</h4>
+    <div class="songlist-wrap songlist-style2">
+      <a href="javascript:void(0)" class="songlist-item" v-for="(item, index) in recommends.songList" :key="index">
+        <div class="song-img">
+          <img v-lazy="item.picUrl">
+        </div>
+        <div class="song-info">
+          <p>{{item.songListDesc}}</p>
+        </div>
+      </a>
+    </div>
+
       <h4 class="recommend-title">歌单推荐(Desktop)</h4>
+      <loading v-show="!fullLoaded"></loading>
+
+    <div v-show="fullLoaded">
       <div class="songlist-wrap">
         <a href="javascript:void(0)" class="songlist-item" v-for="(item, index) in diskList" :key="index">
           <div class="song-img">
@@ -21,19 +34,9 @@
           </div>
         </a>
       </div>
-
-      <h4 class="recommend-title">歌单推荐(Mobile)</h4>
-      <div class="songlist-wrap songlist-style2">
-        <a href="javascript:void(0)" class="songlist-item" v-for="(item, index) in recommends.songList" :key="index">
-          <div class="song-img">
-            <img v-lazy="item.picUrl">
-          </div>
-          <div class="song-info">
-            <p>{{item.songListDesc}}</p>
-          </div>
-        </a>
-      </div>
     </div>
+
+
   </div>
 </template>
 
@@ -67,12 +70,12 @@
             this.recommends = res.data
           }
         })
+
       },
       _getSongList() {
         getDiscList().then((res) => {
           if (res.code === CODES.ERR_OK) {
             this.diskList = res.data.list
-
 
             this.fullLoaded = true
           }
