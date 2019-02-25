@@ -1,8 +1,12 @@
 <template>
   <div class="component-list-view">
-    <div class="list-scroll">
+    <div class="list-scroll" ref="singerList">
 
-      <div class="list-type" v-for="(singerType, index) in list" :key="index">
+      <div class="list-type"
+           v-for="(singerType, index) in list"
+           :key="index"
+           :data-index="index"
+      >
         <p class="type-title">{{singerType.title}}</p>
         <div class="list-item" v-for="(singer, index) in singerType.items" :key="index">
           <img v-lazy="singer.avatar">
@@ -11,10 +15,22 @@
       </div>
 
     </div>
+
+    <ul class="fixed-shortcut-list">
+      <li v-for="(item, index) in shortcutList"
+          :key="index"
+          :data-index="index"
+          :class="{'active':currentShortcut===index}"
+          @touchstart.stop.prevent="shortcutListTouchStart"
+          @touchmove.stop.prevent="shortcutListTouchMove">{{item}}</li>
+    </ul>
   </div>
 </template>
 
 <script>
+  const HEADER_OFFSET_TOP = 45;
+  const SHORTCUT_ITEM_HEIGHT = 20;
+
   export default {
     props: {
       list: {
@@ -29,9 +45,58 @@
         }
       }
     },
+    created() {
+      // 不定义在data里，因为不需要数据双向绑定
+      this.touchDelta = {};
+    },
+    computed: {
+      shortcutList(){
+        let ret = this.list.map((v)=>{
+          return v.title.substring(0,1);
+        });
+        return ret;
+      }
+    },
     data () {
       return {
+        currentShortcut: 0
+      }
+    },
+    methods: {
+      shortcutListTouchStart(evt) {
+        let index = parseInt(evt.target.getAttribute('data-index'));
+        this.currentShortcut = index;
 
+        // 计算滚动偏移：Y轴触摸初始量
+        this.touchDelta.y1 = evt.touches[0].clientY;
+        this.touchDelta.index = index;
+
+        this._scrollToSingerType(index)
+      },
+      shortcutListTouchMove(evt) {
+        // 计算滚动偏移：Y轴触摸移动
+        this.touchDelta.y2 = evt.touches[0].clientY;
+
+        let delta = Math.floor((this.touchDelta.y2 - this.touchDelta.y1)/SHORTCUT_ITEM_HEIGHT)
+
+        let index = this.touchDelta.index + delta;
+
+        if (index<0) {
+          index=0
+        } else if (index >= this.shortcutList.length) {
+          index = this.shortcutList.length-1
+        }
+
+        this.currentShortcut = index;
+        this._scrollToSingerType(index)
+      },
+      _scrollToSingerType(index) {
+        if (index < 0) {
+          index = 0
+        }
+        // 滚动到指定元素
+        this.$refs.singerList.children[index].scrollIntoView();
+        document.documentElement.scrollTop -= HEADER_OFFSET_TOP
       }
     }
   }
@@ -61,4 +126,21 @@
         width 60px
         border-radius 50%
         margin-right 10px
+  .fixed-shortcut-list
+    position fixed
+    top 50%
+    right 0px
+    transform translateY(-40%)
+    padding-right 5px
+    &>li
+      width 20px
+      height 20px
+      line-height: 20px
+      text-align center
+      border-radius 50%
+      font-size 12px
+      &.active
+        background $color-theme
+        color: #fff
+
 </style>
