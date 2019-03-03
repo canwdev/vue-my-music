@@ -4,6 +4,7 @@ import router from './router'
 import store from './store'
 import './registerServiceWorker'
 import './assets/css/base.styl'
+import './assets/css/theme.styl'
 import fastclick from 'fastclick'
 import vueLazyLoad from 'vue-lazyload'
 

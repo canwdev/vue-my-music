@@ -25,6 +25,8 @@
           @touchstart.stop.prevent="shortcutListTouchStart"
           @touchmove.stop.prevent="shortcutListTouchMove">{{item}}</li>
     </ul>
+
+    <div class="fixed-title" v-show="showFixedTitle">{{currentAlpha}}</div>
   </div>
 </template>
 
@@ -47,6 +49,13 @@
         }
       }
     },
+    data () {
+      return {
+        currentShortcut: 0,
+        currentAlpha: '-',
+        showFixedTitle: false
+      }
+    },
     created() {
       // 不定义在data里，因为不需要数据双向绑定
       this.touchDelta = {};
@@ -63,6 +72,9 @@
         this.$nextTick(()=>{
           this.calculateGroupHeight()
         })
+      },
+      currentShortcut() {
+        this.currentAlpha = this.list[this.currentShortcut].title
       }
     },
     computed: {
@@ -73,10 +85,8 @@
         return ret;
       }
     },
-    data () {
-      return {
-        currentShortcut: 0
-      }
+    activated() {
+      this._scrollToSingerType(this.currentShortcut)
     },
     methods: {
       shortcutListTouchStart(evt) {
@@ -114,13 +124,14 @@
         this.$refs.singerList.children[index].scrollIntoView();
         document.documentElement.scrollTop -= HEADER_OFFSET_TOP
       },
-      // 更新currentShortcut
+      // 更新currentShortcut和fixedTitle
       onSingerListScroll(top) {
-        console.log(top)
+        // console.log(top)
         const lgh = this.listGroupsHeight;
         if (top <= 0) {
           this.currentShortcut = 0;
         }
+        this.showFixedTitle = top >= HEADER_OFFSET_TOP*2
 
         for (let i=0; i<lgh.length-1; i++) {
           let h1 = lgh[i];
@@ -145,7 +156,7 @@
           height += v.clientHeight;
           this.listGroupsHeight.push(height)
         })
-        console.log(this.listGroupsHeight)
+        // console.log(this.listGroupsHeight)
       }
     }
   }
@@ -155,14 +166,14 @@
 @import "../assets/css/theme.styl"
 .component-list-view
   padding 0
+  .type-title, .fixed-title
+    border-top 1px solid $color-bg-dark
+    border-bottom 1px solid $color-bg-dark
+    line-height: 23px
+    padding 5px 10px
+    font-weight: bold
+    box-sizing border-box
   .list-type
-    .type-title
-      border-top 1px solid $color-bg-dark
-      border-bottom 1px solid $color-bg-dark
-      line-height: 23px
-      padding 5px 10px
-      font-weight: bold
-      box-sizing border-box
     .list-item
       display flex
       align-items center
@@ -191,5 +202,11 @@
       &.active
         background $color-theme
         color: #fff
-
+  .fixed-title
+    position fixed
+    top: 44px;
+    left 0
+    width 100%
+    background #fff
+    animation fadeIn 0.5s
 </style>

@@ -44,7 +44,7 @@
             if (this.$route.path === '/singer') {
               bus.$emit('singerListScroll', top)
             }
-          }, 10)
+          }, 5)
         })
       }
     }
@@ -52,6 +52,7 @@
 </script>
 
 <style lang="stylus">
+
   .fixed-navbar-placeholder
     height: 45px
   .component-header-tabs
@@ -64,13 +65,4 @@
       background rgba(255, 255, 255, 0.92)
       animation fadeIn 0.5s
       box-shadow 0px 2px 8px 0px rgba(51,51,51,0.12)
-
-  @keyframes fadeIn {
-    from {
-      opacity 0
-    }
-    to {
-      opacity 1
-    }
-  }
 </style>
