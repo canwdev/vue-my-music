@@ -6,6 +6,7 @@
            v-for="(singerType, index) in list"
            :key="index"
            :data-index="index"
+           ref="singerListGroup"
       >
         <p class="type-title">{{singerType.title}}</p>
         <div class="list-item" v-for="(singer, index) in singerType.items" :key="index">
@@ -28,6 +29,7 @@
 </template>
 
 <script>
+  import bus from '../assets/js/bus'
   const HEADER_OFFSET_TOP = 45;
   const SHORTCUT_ITEM_HEIGHT = 20;
 
@@ -48,6 +50,20 @@
     created() {
       // 不定义在data里，因为不需要数据双向绑定
       this.touchDelta = {};
+      this.listGroupsHeight = [];
+    },
+    mounted() {
+      // 获取当前列表滚动高度
+      bus.$on('singerListScroll', (top) => {
+        this.onSingerListScroll(top)
+      })
+    },
+    watch: {
+      list() {
+        this.$nextTick(()=>{
+          this.calculateGroupHeight()
+        })
+      }
     },
     computed: {
       shortcutList(){
@@ -65,7 +81,7 @@
     methods: {
       shortcutListTouchStart(evt) {
         let index = parseInt(evt.target.getAttribute('data-index'));
-        this.currentShortcut = index;
+        // this.currentShortcut = index;
 
         // 计算滚动偏移：Y轴触摸初始量
         this.touchDelta.y1 = evt.touches[0].clientY;
@@ -77,17 +93,17 @@
         // 计算滚动偏移：Y轴触摸移动
         this.touchDelta.y2 = evt.touches[0].clientY;
 
-        let delta = Math.floor((this.touchDelta.y2 - this.touchDelta.y1)/SHORTCUT_ITEM_HEIGHT)
+        let delta = Math.floor((this.touchDelta.y2 - this.touchDelta.y1) / SHORTCUT_ITEM_HEIGHT)
 
         let index = this.touchDelta.index + delta;
 
-        if (index<0) {
-          index=0
+        if (index < 0) {
+          index = 0
         } else if (index >= this.shortcutList.length) {
-          index = this.shortcutList.length-1
+          index = this.shortcutList.length - 1
         }
 
-        this.currentShortcut = index;
+        // this.currentShortcut = index;
         this._scrollToSingerType(index)
       },
       _scrollToSingerType(index) {
@@ -97,6 +113,39 @@
         // 滚动到指定元素
         this.$refs.singerList.children[index].scrollIntoView();
         document.documentElement.scrollTop -= HEADER_OFFSET_TOP
+      },
+      // 更新currentShortcut
+      onSingerListScroll(top) {
+        console.log(top)
+        const lgh = this.listGroupsHeight;
+        if (top <= 0) {
+          this.currentShortcut = 0;
+        }
+
+        for (let i=0; i<lgh.length-1; i++) {
+          let h1 = lgh[i];
+          let h2 = lgh[i+1];
+
+          if (top >= h1 && top <= h2) {
+            this.currentShortcut = i;
+            return
+          }
+
+          this.currentShortcut = lgh.length
+        }
+      },
+      // 计算列表每组的高度
+      calculateGroupHeight() {
+        this.listGroupsHeight = [];
+        let groups = this.$refs.singerListGroup;
+        let height = 0;
+        this.listGroupsHeight.push(height);
+
+        groups.forEach((v, i) => {
+          height += v.clientHeight;
+          this.listGroupsHeight.push(height)
+        })
+        console.log(this.listGroupsHeight)
       }
     }
   }

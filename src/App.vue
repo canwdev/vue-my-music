@@ -12,6 +12,7 @@
 <script>
   import vHeader from './components/header'
   import headerTabs from './components/headerTabs'
+  import bus from './assets/js/bus'
 
   export default {
     components: {
@@ -30,10 +31,20 @@
       // 顶部导航滚动优化
       _scrollOptimization () {
         window.addEventListener('scroll', (e) => {
-          const maxOffsetTop = 45+45
-          let top = document.documentElement.scrollTop
+          // 节流函数
+          if (this.scrollLimiter) {
+            clearTimeout(this.scrollLimiter)
+          }
+          this.scrollLimiter = setTimeout(()=>{
+            const maxOffsetTop = 90 //45+45
+            let top = document.documentElement.scrollTop
+            this.fixedNavbar = top > maxOffsetTop
 
-          this.fixedNavbar = top > maxOffsetTop;
+            // 向singerList组件传值
+            if (this.$route.path === '/singer') {
+              bus.$emit('singerListScroll', top)
+            }
+          }, 10)
         })
       }
     }
