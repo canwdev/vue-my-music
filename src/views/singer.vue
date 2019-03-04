@@ -1,11 +1,12 @@
 <template>
   <div class="view-singer">
-    <singer-list :list="singers"></singer-list>
+    <singer-list :list="singers" @selectSinger="selectSinger"></singer-list>
+    <router-view></router-view>
   </div>
 </template>
 
 <script>
-  import {getSingerList} from "../api/recommend"
+  import {getSingerList} from "../api/singer"
   import singerList from '../components/singerList'
 
   class Singer {
@@ -31,7 +32,7 @@
     methods: {
       _getSingerList() {
         getSingerList().then((res) => {
-          console.log('_getSingerList', res)
+          // console.log('_getSingerList', res)
           if (res.code === 0) {
             let list = res.data.list;
             this.singers = this.normalizeSingerList(list)
@@ -91,6 +92,10 @@
         })
 
         return hotList.concat(fList);
+      },
+      selectSinger(singer) {
+        this.$store.commit('updateSinger', singer)
+        this.$router.push({path: `/singer/detail/${singer.id}`})
       }
     }
   }

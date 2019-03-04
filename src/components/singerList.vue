@@ -9,7 +9,11 @@
            ref="singerListGroup"
       >
         <p class="type-title">{{singerType.title}}</p>
-        <div class="list-item" v-for="(singer, index) in singerType.items" :key="index">
+        <div class="list-item"
+             v-for="(singer, index) in singerType.items"
+             :key="index"
+             @click="selectSinger(singer)"
+        >
           <img v-lazy="singer.avatar">
           <p>{{singer.name}}</p>
         </div>
@@ -23,7 +27,9 @@
           :data-index="index"
           :class="{'active':currentShortcut===index}"
           @touchstart.stop.prevent="shortcutListTouchStart"
-          @touchmove.stop.prevent="shortcutListTouchMove">{{item}}</li>
+          @touchmove.stop.prevent="shortcutListTouchMove"
+      >{{item}}
+      </li>
     </ul>
 
     <div class="fixed-title" v-show="showFixedTitle">{{currentAlpha}}</div>
@@ -52,7 +58,7 @@
     data () {
       return {
         currentShortcut: 0,
-        currentAlpha: '-',
+        currentAlpha: '热门歌手',
         showFixedTitle: false
       }
     },
@@ -86,7 +92,9 @@
       }
     },
     activated() {
-      this._scrollToSingerType(this.currentShortcut)
+      if (this.currentShortcut>0) {
+        this._scrollToSingerType(this.currentShortcut)
+      }
     },
     methods: {
       shortcutListTouchStart(evt) {
@@ -157,6 +165,9 @@
           this.listGroupsHeight.push(height)
         })
         // console.log(this.listGroupsHeight)
+      },
+      selectSinger(singer) {
+        this.$emit('selectSinger', singer);
       }
     }
   }
@@ -189,9 +200,9 @@
   .fixed-shortcut-list
     position fixed
     top 50%
-    right 0px
+    right 0
     transform translateY(-40%)
-    padding-right 5px
+    padding-right: 1px
     &>li
       width 20px
       height 20px

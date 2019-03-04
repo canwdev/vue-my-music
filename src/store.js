@@ -5,10 +5,12 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
-
+    singer: {}
   },
   mutations: {
-
+    updateSinger(state, singer) {
+      state.singer = singer
+    }
   },
   actions: {
 

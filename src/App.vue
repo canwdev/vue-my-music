@@ -52,6 +52,7 @@
 </script>
 
 <style lang="stylus">
+  @import "./assets/css/theme.styl"
 
   .fixed-navbar-placeholder
     height: 45px
@@ -64,5 +65,5 @@
       width 100%
       background rgba(255, 255, 255, 0.92)
       animation fadeIn 0.5s
-      box-shadow 0px 2px 8px 0px rgba(51,51,51,0.12)
+      box-shadow $navbar-shadow
 </style>
