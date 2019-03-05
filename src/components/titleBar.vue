@@ -43,6 +43,7 @@
     color: $color-text
     background $color-bg
     box-shadow $navbar-shadow
+    transition all .3s
     a
       color: $color-text
     &.transparent

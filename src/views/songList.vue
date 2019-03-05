@@ -1,8 +1,8 @@
 <template>
   <transition name="slide">
-    <div class="view-song-list">
-      <title-bar :title="singer.name" :transparent="true" :fixed="true"></title-bar>
-      <div class="cover-box">
+    <div class="view-song-list" ref="songList">
+      <title-bar :title="singer.name" :transparent="!titleBarBg" :fixed="true"></title-bar>
+      <div class="cover-box" ref="coverBox">
         <img :src="singer.avatar">
       </div>
 
@@ -43,12 +43,39 @@
           return []
         }
       }
+    },
+    data() {
+      return {
+        titleBarBg: false
+      }
+    },
+    mounted() {
+      this.scrollHandler();
+    },
+    methods: {
+      scrollHandler() {
+        let scroll = this.$refs.songList;
+        let coverBox = this.$refs.coverBox;
+        let coverHeight = coverBox.clientHeight - 45;
+
+        scroll.addEventListener('scroll', (evt) => {
+          let top = scroll.scrollTop
+
+          this.titleBarBg = top >= coverHeight
+        })
+      }
     }
   }
 </script>
 
 <style lang="stylus" scoped>
   @import "../assets/css/theme.styl"
+  .component-title-bar.bg
+    color: $color-text
+    background $color-bg
+    box-shadow $navbar-shadow
+    a
+      color: $color-text
   .view-song-list
     position fixed
     top 0
