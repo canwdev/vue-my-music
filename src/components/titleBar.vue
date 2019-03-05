@@ -1,5 +1,5 @@
 <template>
-  <div class="component-title-bar">
+  <div class="component-title-bar" :class="{transparent, fixed}">
     <a class="back" href="javascript:" @click="back"><span class="icon iconfont icon-arrow-back"></span></a>
     <p class="title">{{title}}</p>
     <a class="action" v-show="showAction" href="javascript:"></a>
@@ -14,6 +14,15 @@
         default: '标题'
       },
       showAction: {
+        type: Boolean,
+        default: false
+      },
+      transparent: {
+        type: Boolean,
+        default: false
+      }
+      ,
+      fixed: {
         type: Boolean,
         default: false
       }
@@ -34,6 +43,20 @@
     color: $color-text
     background $color-bg
     box-shadow $navbar-shadow
+    a
+      color: $color-text
+    &.transparent
+      background linear-gradient(top, rgba(0,0,0,0.3) 0%,rgba(0,0,0,0) 100%);
+      color: #fff
+      box-shadow unset
+      a
+        color: #fff
+    &.fixed
+      position fixed
+      top: 0
+      left: 0
+      width: 100%
+      z-index 200
     .action,.back
       position absolute
       top 50%
@@ -42,7 +65,6 @@
       box-sizing border-box
       .iconfont
         font-size $font-xl
-        color: $color-text
     .action
       right 0
     .back

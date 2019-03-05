@@ -1,21 +1,16 @@
 <template>
-  <transition name="slide">
-    <div class="view-song-list">
-      <title-bar :title="title"></title-bar>
-
-    </div>
-  </transition>
+  <song-list :singer="singer" :songs="songs"></song-list>
 </template>
 
 <script>
-  import titleBar from '../components/titleBar'
+  import songList from './songList'
   import {mapState} from 'vuex'
   import {getSingerDetail} from "../api/singer"
   import {createSong} from "../assets/js/song"
 
   export default {
     components: {
-      titleBar
+      songList
     },
     data() {
       return {
@@ -23,9 +18,6 @@
       }
     },
     computed: {
-      title() {
-        return this.singer.name
-      },
       ...mapState([
         'singer'
       ])
@@ -57,7 +49,7 @@
           ret.push(createSong(musicData))
         })
 
-        console.log(ret)
+        // console.log(ret)
         return ret;
       },
 
@@ -74,15 +66,5 @@
 </script>
 
 <style lang="stylus" scoped>
-  @import "../assets/css/theme.styl"
-
-  .view-song-list
-    position fixed
-    top 0
-    left 0
-    width 100%
-    bottom 0
-    background $color-bg
-    z-index 200
 
 </style>
