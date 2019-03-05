@@ -2,6 +2,7 @@
   <transition name="slide">
     <div class="view-song-list">
       <title-bar :title="title"></title-bar>
+
     </div>
   </transition>
 </template>

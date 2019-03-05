@@ -18,7 +18,7 @@ export default new Router({
       path: '/singer',
       component: () => import('./views/singer.vue'),
       children: [
-        {path: 'detail/:id', component: () => import('./views/songList.vue')}
+        {path: 'detail/:id', component: () => import('./views/singerDetail.vue')}
       ]
     },
     {
