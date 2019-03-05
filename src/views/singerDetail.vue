@@ -10,10 +10,16 @@
   import titleBar from '../components/titleBar'
   import {mapState} from 'vuex'
   import {getSingerDetail} from "../api/singer"
+  import {createSong} from "../assets/js/song"
 
   export default {
     components: {
       titleBar
+    },
+    data() {
+      return {
+        songs: []
+      }
     },
     computed: {
       title() {
@@ -32,15 +38,28 @@
     },
     methods: {
       loadSongList() {
-        const id = this.singer.id;
+        let id = this.singer.id;
         if (!id) {
           this.$router.back()
         }
         getSingerDetail(id).then((res)=> {
-          console.log(res)
+          if (res.code === 0) {
+            this.songs = this._normalizeSong(res.data.list);
+          }
         })
 
       },
+      _normalizeSong(list) {
+        let ret = [];
+        list.forEach((v)=> {
+          let {musicData} = v;
+          ret.push(createSong(musicData))
+        })
+
+        console.log(ret)
+        return ret;
+      },
+
       allowBodyScroll (yes = true) {
         let bodyEl = document.body;
         if (!yes) {
