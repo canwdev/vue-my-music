@@ -1,8 +1,8 @@
 <template>
   <div class="component-title-bar" :class="{transparent, fixed}">
-    <a class="back" href="javascript:" @click="back"><span class="icon iconfont icon-arrow-back"></span></a>
+    <a class="back" href="javascript:" @click="back" v-html="btnBack.text"></a>
     <p class="title">{{title}}</p>
-    <a class="action" v-show="showAction" href="javascript:"></a>
+    <a class="action" v-show="btnAction.custom" href="javascript:" v-html="btnAction.text" @click="btnAction.action"></a>
   </div>
 </template>
 
@@ -13,23 +13,42 @@
         type: String,
         default: '标题'
       },
-      showAction: {
-        type: Boolean,
-        default: false
-      },
       transparent: {
         type: Boolean,
         default: false
-      }
-      ,
+      },
       fixed: {
         type: Boolean,
         default: false
+      },
+      btnBack: {
+        type: Object,
+        default: function () {
+          return {
+            custom: false,
+            text: `<span class="icon iconfont icon-arrow-back"></span>`,
+            action: function () {}
+          }
+        }
+      },
+      btnAction: {
+        type: Object,
+        default: function () {
+          return {
+            custom: false,
+            text: '',
+            action: function () {}
+          }
+        }
       }
     },
     methods: {
       back() {
-        this.$router.back()
+        if (!this.btnBack.custom) {
+          this.$router.back()
+        } else {
+          this.btnBack.action()
+        }
       }
     }
   }
@@ -64,7 +83,7 @@
       transform translateY(-50%)
       padding 10px
       box-sizing border-box
-      .iconfont
+      >>>.iconfont
         font-size $font-xl
     .action
       right 0

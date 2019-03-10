@@ -1,5 +1,5 @@
 export default class Song {
-  constructor({id, mid, singer, name, album, duration, image, url}) {
+  constructor({id, mid, singer, name, album, duration, image, url, songmid}) {
     this.id = id
     this.mid = mid
     this.singer = singer

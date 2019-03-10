@@ -1,14 +1,15 @@
 <template>
   <transition name="slide">
-    <div class="view-song-list" ref="songList">
+    <div class="view-song-list fullscreen-view" ref="songList">
       <title-bar :title="singer.name" :transparent="!titleBarBg" :fixed="true"></title-bar>
       <div class="cover-box" ref="coverBox">
         <img :src="singer.avatar">
+        <a href="javascript:" class="btn-random-play" v-show="!titleBarBg"><span class="icon iconfont icon-shuffle"></span> 随机播放</a>
       </div>
 
       <loading v-show="!songs.length"></loading>
       <ul class="list-wrap">
-        <li v-for="(item, index) in songs" :key="index">
+        <li v-for="(item, index) in songs" :key="index" @click="selectSong(item, index)">
           <p class="song-name">{{item.name}}</p>
           <p class="song-album">{{item.singer}} - {{item.album}}</p>
         </li>
@@ -63,6 +64,9 @@
 
           this.titleBarBg = top >= coverHeight
         })
+      },
+      selectSong(song, index) {
+        this.$emit('selectSong', song, index)
       }
     }
   }
@@ -77,14 +81,6 @@
     a
       color: $color-text
   .view-song-list
-    position fixed
-    top 0
-    left 0
-    width 100%
-    bottom 0
-    background $color-bg
-    z-index 200
-    overflow auto
 
     .list-wrap
       padding 10px 10px
@@ -116,4 +112,18 @@
         right 0
         bottom 0
         object-fit cover
+      .btn-random-play
+        position: absolute
+        left: 50%
+        bottom: 20px
+        transform translateX(-50%)
+        padding 10px 15px
+        box-sizing border-box
+        color: #fff
+        text-shadow 0 0 10px rgba(0, 0, 0, 0.53)
+        font-size $font-l
+        border-radius 50px
+        border 1px solid
+      .tmp
+        background red
 </style>

@@ -6,6 +6,7 @@
     <keep-alive>
       <router-view></router-view>
     </keep-alive>
+    <player></player>
   </div>
 </template>
 
@@ -13,11 +14,13 @@
   import vHeader from './components/header'
   import headerTabs from './components/headerTabs'
   import bus from './assets/js/bus'
+  import player from './views/player'
 
   export default {
     components: {
       vHeader,
-      headerTabs
+      headerTabs,
+      player
     },
     data () {
       return {
