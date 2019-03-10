@@ -2,7 +2,8 @@
   <div class="component-title-bar" :class="{transparent, fixed}">
     <a class="back" href="javascript:" @click="back" v-html="btnBack.text"></a>
     <p class="title">{{title}}</p>
-    <a class="action" v-show="btnAction.custom" href="javascript:" v-html="btnAction.text" @click="btnAction.action"></a>
+    <p class="subtitle" v-if="subtitle">{{subtitle}}</p>
+    <a class="action" v-if="btnAction.custom" href="javascript:" v-html="btnAction.text" @click="btnAction.action"></a>
   </div>
 </template>
 
@@ -12,6 +13,10 @@
       title: {
         type: String,
         default: '标题'
+      },
+      subtitle: {
+        type: String,
+        default: null
       },
       transparent: {
         type: Boolean,
@@ -99,4 +104,10 @@
       text-overflow: ellipsis
       white-space: nowrap
       overflow: hidden
+    .subtitle
+      position: absolute
+      bottom -10px
+      left 50%
+      transform translateX(-50%)
+      font-size $font-m
 </style>

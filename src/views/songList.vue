@@ -124,6 +124,4 @@
         font-size $font-l
         border-radius 50px
         border 1px solid
-      .tmp
-        background red
 </style>
