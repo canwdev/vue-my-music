@@ -11,7 +11,7 @@ export default new Vuex.Store({
       playing: false,
       fullscreen: false,
       playList: [],
-      randomList: [],
+      backupList: [],
       mode: playMode.normal,
       currentIndex: -1
     }

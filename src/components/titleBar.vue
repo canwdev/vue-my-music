@@ -109,5 +109,6 @@
       bottom -10px
       left 50%
       transform translateX(-50%)
+      width fit-content
       font-size $font-m
 </style>

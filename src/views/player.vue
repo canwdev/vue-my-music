@@ -22,14 +22,28 @@
         <div class="control-box">
           <div class="seekbar-wrap">
             <span class="time-start">{{formatTime(currentTime)}}</span>
-            <input type="range" min="0" :max="currentSong.duration" :value="currentTime" @input="seekbarSeeking" @change="seekbarChange" class="seekbar-box" ref="seekBar">
+            <div class="seekbar-box">
+              <div class="fill"
+                   :style="'width: '+(currentTime/currentSong.duration)*100+'%'"
+              ></div>
+              <input type="range" min="0" :max="currentSong.duration" :value="currentTime" @input="seekbarSeeking" @change="seekbarChange" class="seekbar-input" ref="seekBar">
+            </div>
+
 
             <span class="time-end">{{formatTime(currentSong.duration)}}</span>
           </div>
           <div class="play-control-wrap">
-            <a class="playmode iconfont icon-repeat"></a>
+            <a class="playmode iconfont"
+               :class="playModeClass"
+               @click="togglePlayMode"
+            ></a>
+
             <a class="previous iconfont icon-skip-previous" @click="previousSong"></a>
-            <a class="playpause iconfont" :class="{'icon-play-arrow': !player.playing, 'icon-pause': player.playing}" @click="togglePlaying()"></a>
+
+            <a class="playpause iconfont"
+               :class="{'icon-play-arrow': !player.playing, 'icon-pause': player.playing}"
+               @click="togglePlaying()"></a>
+
             <a class="next iconfont icon-skip-next" @click="nextSong"></a>
             <a class="playlist iconfont icon-queue-muspx"></a>
           </div>
@@ -54,7 +68,7 @@
       </div>
     </transition>
 
-    <audio ref="audio" :src="currentSongSrc" @timeupdate="timeUpdate"></audio>
+    <audio ref="audio" :src="currentSongSrc" @timeupdate="timeUpdate" @ended="musicEnd"></audio>
 
   </div>
 </template>
@@ -63,6 +77,8 @@
   import titleBar from '../components/titleBar'
   import {mapState} from 'vuex'
   import {getSongUrl} from "../api/song"
+  import {playMode} from "../assets/js/common"
+  import {shuffleArray} from "../assets/js/utils"
 
   export default {
     components: {
@@ -89,6 +105,17 @@
       ...mapState(['player']),
       currentSong() {
         return this.player.playList[this.player.currentIndex] || {}
+      },
+      playModeClass() {
+
+        if (this.player.mode === playMode.normal) {
+          return 'icon-repeat'
+        } else if (this.player.mode === playMode.loop) {
+          return 'icon-repeat-one'
+        } else if (this.player.mode === playMode.random) {
+          return 'icon-shuffle'
+        }
+        return ''
       }
     },
     watch: {
@@ -98,21 +125,25 @@
         }
       },
       currentSong(nv, ov) {
-        getSongUrl(nv.mid).then((res)=>{
+        if (nv.mid === ov.mid) {
+          return
+        }
+        getSongUrl(nv.mid).then((res) => {
           this.currentSongSrc = res
-        },(err)=>{
+        }, (err) => {
           this.$toast(err)
           console.log(err, nv)
           this.currentSongSrc = ''
           this.togglePlaying(true)
 
-        }).catch((e)=>{
+        }).catch((e) => {
           console.log('获取音乐地址失败', e)
         })
       },
       currentSongSrc(nv, ov) {
+        this.$refs.audio.currentTime = 0
         if (nv !== '') {
-          this.$nextTick(()=>{
+          this.$nextTick(() => {
             this.togglePlaying(false)
           })
         } else {
@@ -123,7 +154,7 @@
     },
     mounted() {
       // 键盘控制
-      document.addEventListener('keyup', (e)=>{
+      document.addEventListener('keyup', (e) => {
         if (this.player.fullscreen) {
           switch (e.which) {
             case 32:  // 空格
@@ -171,18 +202,22 @@
       previousSong() {
         if (this.player.currentIndex <= 0) {
           this.$toast('跳转到列表末尾')
-          this.player.currentIndex = this.player.playList.length-1
+          this.player.currentIndex = this.player.playList.length - 1
           return
         }
         this.player.currentIndex--
       },
       nextSong() {
-        if (this.player.currentIndex >= this.player.playList.length-1) {
+        if (this.player.currentIndex >= this.player.playList.length - 1) {
           this.$toast('从列表第一首歌播放')
           this.player.currentIndex = 0
           return
         }
         this.player.currentIndex++
+      },
+      loopSong() {
+        this.$refs.audio.currentTime = 0
+        this.$refs.audio.play()
       },
       openPlayList() {
 
@@ -194,9 +229,16 @@
       },
       formatTime(interval) {
         interval = Math.floor(interval)
-        let minute = Math.floor(interval/60)
+        let minute = Math.floor(interval / 60)
         let second = (interval % 60).toString().padStart(2, '0')
         return minute + ':' + second
+      },
+      musicEnd() {
+        if (this.player.mode === playMode.loop) {
+          this.loopSong()
+        } else {
+          this.nextSong()
+        }
       },
       seekbarSeeking(e) {
         this.seeking = true
@@ -206,6 +248,46 @@
         this.seeking = false
         this.$refs.audio.currentTime = e.target.value
         this.togglePlaying(false)
+      },
+      togglePlayMode() {
+        const mode = (this.player.mode + 1) % 3
+        this.$store.commit('updatePlayer', {
+          mode
+        })
+
+        if (mode === playMode.random) {
+          // 切换随机播放模式
+          // 打乱原有播放列表
+          let randomList = shuffleArray(this.player.playList)
+          // 更新现在播放歌曲的currentIndex
+          let currentIndex = randomList.findIndex((v, i)=>{
+            return (v.mid === this.currentSong.mid)
+          })
+
+          console.log('随机播放', currentIndex)
+
+          this.$store.commit('updatePlayer', {
+            currentIndex,
+            playList: randomList,
+            backupList: this.player.playList
+          })
+        } else {
+          // 切换回正常播放模式
+          let backupList = this.player.backupList
+          if (backupList.length > 0) {
+            let currentIndex = backupList.findIndex((v, i)=>{
+              return (v.mid === this.currentSong.mid)
+            })
+
+            console.log('正常播放', currentIndex)
+
+            this.$store.commit('updatePlayer', {
+              currentIndex,
+              playList: backupList,
+              backupList: []
+            })
+          }
+        }
       }
     }
   }
@@ -240,6 +322,7 @@
         background rgba(0, 0, 0, 0.3)
     .cover-box
       position absolute
+      z-index -1
       top 70px
       left 0
       width 100%
@@ -287,8 +370,32 @@
         padding 0 20px
         .seekbar-box
           width 75%
-          height 5px
-          background rgba(255, 255, 255, 0.25)
+          height 100%
+          display flex
+          align-items center
+          position: relative
+
+          .fill
+            position: absolute
+            top 50%
+            transform translateY(-50%)
+            height 5px
+            width 0
+            background #fff
+            user-select none
+            pointer-events none
+            z-index -1
+          .seekbar-input
+            width 100%
+            height 5px
+            background rgba(255, 255, 255, 0.25)
+            appearance: none;
+            &::-webkit-slider-thumb
+              appearance: none;
+              width: 20px;
+              height: 20px;
+              border-radius: 50%;
+              background #fff
         .time-start, .time-end
           width 10%
           text-align: center
@@ -301,6 +408,9 @@
           position: absolute
           top 0
           line-height: 80px
+          transition all .3s
+          &:active
+            text-shadow 0 0 30px #fff
         .playlist, .playmode
           font-size 30px
         .playmode
@@ -331,11 +441,10 @@
     .cover
       align-self stretch
       width 15%
-      background $color-bg-dark
       &>img
         width 100%
         height 100%
-        object-fit cover
+        object-fit contain
     .title-box
       flex 1
       padding 0 10px
