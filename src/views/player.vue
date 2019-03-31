@@ -18,6 +18,9 @@
             <img :src="currentSong.image">
             <!--<p class="icon iconfont icon-audiotrack"></p>-->
           </div>
+          <div class="actions">
+            <button @click="downloadSong">下载</button>
+          </div>
         </div>
         <div class="control-box">
           <div class="seekbar-wrap">
@@ -76,9 +79,10 @@
 <script>
   import titleBar from '../components/titleBar'
   import {mapState} from 'vuex'
-  import {getSongUrl} from "../api/song"
+  import {getSongUrl, getLyric} from "../api/song"
   import {playMode} from "../assets/js/common"
   import {shuffleArray} from "../assets/js/utils"
+  import {Base64} from 'js-base64'
 
   export default {
     components: {
@@ -98,7 +102,8 @@
         },
         currentSongSrc: '',
         currentTime: 0,
-        seeking: false
+        seeking: false,
+        lyric: ''
       }
     },
     computed: {
@@ -135,9 +140,14 @@
           console.log(err, nv)
           this.currentSongSrc = ''
           this.togglePlaying(true)
-
         }).catch((e) => {
           console.log('获取音乐地址失败', e)
+        })
+
+        getLyric(nv.mid).then((res)=> {
+          this.lyric = Base64.decode(res.lyric)
+        }).catch((e) => {
+          console.log('获取歌词失败', e)
         })
       },
       currentSongSrc(nv, ov) {
@@ -288,6 +298,21 @@
             })
           }
         }
+      },
+      downloadSong() {
+        let src = this.currentSongSrc
+        if (src === '') {
+          this.$toast('获取下载地址失败')
+          return
+        }
+
+        var a = document.createElement('a');
+        var filename = '';
+        a.href = src;
+        a.download = 'filename';
+        a.target = '_blank'
+        a.click();
+        window.URL.revokeObjectURL(src);
       }
     }
   }
@@ -299,6 +324,7 @@
 .view-player
   .fullscreen-player
     z-index 301
+    overflow: hidden
     .background
       position absolute
       top 0
@@ -330,6 +356,12 @@
       display flex
       align-items center
       justify-content center
+      .actions
+        position: absolute
+        bottom 0
+        left 0
+        width 100%
+        text-align: center
       .cd-wrap
         width 70%
         height 0

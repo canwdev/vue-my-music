@@ -1,4 +1,6 @@
 import jsonp from "../assets/js/jsonp"
+import {commonParams} from "./config"
+import axios from 'axios'
 
 /**
  * 获取歌曲Vkey
@@ -25,7 +27,7 @@ export function getSongVkey(songmid) {
 export function getSongUrl(songmid) {
   return new Promise((resove, reject) => {
     getSongVkey(songmid).then(
-      (res)=>{
+      (res) => {
         let vkey = res.data.items[0].vkey;
         if (vkey === '') {
           reject('获取Vkey失败，无法播放')
@@ -34,9 +36,28 @@ export function getSongUrl(songmid) {
         let url = `http://dl.stream.qqmusic.qq.com/C400${songmid}.m4a?fromtag=38&guid=5931742855&vkey=${vkey}`
         resove(url)
       },
-      (err)=> {
+      (err) => {
         reject(err)
       }
     )
+  })
+}
+
+export function getLyric(songmid) {
+  let url = '/api/getLyric'
+
+  let data = Object.assign({}, commonParams, {
+    songmid: songmid,
+    pcachetime: +new Date(),
+    format: 'json',
+    platform: 'yqq',
+    hostUin: 0,
+    needNewCode: 0
+  })
+
+  return axios.get(url, {
+    params: data
+  }).then((res) => {
+    return Promise.resolve(res.data)
   })
 }

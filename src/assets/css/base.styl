@@ -2,6 +2,21 @@
 @import "./theme.styl"
 @import "./iconfont/iconfont.css"
 
+pc-adapt()
+  @media screen and (min-width: 425px)
+    width 425px
+    margin 0 auto
+
+
+pc-adapt-fixed()
+  @media screen and (min-width: 425px)
+    width 425px
+    margin 0 auto
+    left 50%
+    transform translateX(-50%)
+
+
+
 body, html
   line-height: 1
   font-family: 'PingFang SC', 'STHeitiSC-Light', 'Helvetica-Light', arial, sans-serif, 'Droid Sans Fallback'
@@ -9,6 +24,7 @@ body, html
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1)
   background: $color-background
   color: $color-text
+  pc-adapt()
 
 no-wrap()
   text-overflow: ellipsis
@@ -51,3 +67,4 @@ no-wrap()
   background $color-bg
   z-index 200
   overflow auto
+  pc-adapt-fixed()

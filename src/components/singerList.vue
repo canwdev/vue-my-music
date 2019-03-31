@@ -177,6 +177,8 @@
 @import "../assets/css/theme.styl"
 .component-list-view
   padding 0
+  .list-scroll
+    padding-bottom: 70px
   .type-title, .fixed-title
     border-top 1px solid $color-bg-dark
     border-bottom 1px solid $color-bg-dark
@@ -201,12 +203,12 @@
     position fixed
     top 50%
     right 0
-    transform translateY(-40%)
+    transform translateY(-50%)
     padding-right: 1px
     &>li
-      width 20px
-      height 20px
-      line-height: 20px
+      width 15px
+      height 15px
+      line-height: 1.3
       text-align center
       border-radius 50%
       font-size 12px
@@ -220,4 +222,5 @@
     width 100%
     background #fff
     animation fadeIn 0.5s
+    pc-adapt-fixed()
 </style>

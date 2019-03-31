@@ -69,4 +69,5 @@
       background rgba(255, 255, 255, 0.92)
       animation fadeIn 0.5s
       box-shadow $navbar-shadow
+      pc-adapt-fixed()
 </style>
