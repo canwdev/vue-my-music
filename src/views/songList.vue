@@ -84,6 +84,7 @@
 
     .list-wrap
       padding 10px 10px
+      margin-bottom: 50px
       &>li
         padding 15px 10px
         &:active

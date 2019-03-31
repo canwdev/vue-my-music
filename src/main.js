@@ -7,6 +7,9 @@ import './assets/css/base.styl'
 import './assets/css/theme.styl'
 import fastclick from 'fastclick'
 import vueLazyLoad from 'vue-lazyload'
+import toastRegistry from './components/toast/index.js'
+
+Vue.use(toastRegistry)
 
 fastclick.attach(document.body)
 

@@ -27,6 +27,10 @@ export function getSongUrl(songmid) {
     getSongVkey(songmid).then(
       (res)=>{
         let vkey = res.data.items[0].vkey;
+        if (vkey === '') {
+          reject('获取Vkey失败，无法播放')
+        }
+
         let url = `http://dl.stream.qqmusic.qq.com/C400${songmid}.m4a?fromtag=38&guid=5931742855&vkey=${vkey}`
         resove(url)
       },

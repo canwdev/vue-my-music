@@ -4,6 +4,7 @@ module.exports = {
   baseUrl: './',
   productionSourceMap: false,
   devServer: {
+    disableHostCheck: true,
     before(app) {
       app.get('/api/getDiscList', (req, res) => {
         let url = 'https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg'
