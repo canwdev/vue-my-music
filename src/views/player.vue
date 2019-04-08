@@ -13,23 +13,51 @@
             :subtitle="currentSong.singer"
             :transparent="true"
         ></title-bar>
-        <div class="cover-box">
-          <div class="cd-wrap" :class="{pause: !player.playing}">
-            <img :src="currentSong.image">
-            <!--<p class="icon iconfont icon-audiotrack"></p>-->
-          </div>
+        <div class="player-main-box">
+          <transition name="fade">
+            <div class="cover-box" v-show="!showLyric" @click="showLyric = true">
+              <div class="cd-wrap" :class="{pause: !player.playing}">
+                <img :src="currentSong.image">
+                <!--<p class="icon iconfont icon-audiotrack"></p>-->
+              </div>
+            </div>
+          </transition>
+
+          <transition name="fade">
+            <div class="lyric-wrap" v-show="showLyric" @click="showLyric = false">
+
+              <div class="volume-wrap">
+                <p class="vw--title">音量</p>
+                <div class="common-seekbar-box">
+                  <div class="csb--fill"
+                       :style="'width: '+(audioVolume/100)*100+'%'"
+                  ></div>
+                  <input type="range" min="0" max="100" :value="audioVolume" @input="seekbarVolumeSeeking" class="common-seekbar seekbar-input" ref="seekBar">
+                </div>
+              </div>
+
+              <ul class="lrc-main">
+                <li v-if="lyricArr"
+                  v-for="(v,i) in lyricArr.lines"
+                  :key="i"
+                >{{ v.txt }}</li>
+              </ul>
+            </div>
+          </transition>
+
           <div class="actions">
             <button @click="downloadSong">下载</button>
           </div>
         </div>
+
         <div class="control-box">
           <div class="seekbar-wrap">
             <span class="time-start">{{formatTime(currentTime)}}</span>
-            <div class="seekbar-box">
-              <div class="fill"
+            <div class="common-seekbar-box">
+              <div class="csb--fill"
                    :style="'width: '+(currentTime/currentSong.duration)*100+'%'"
               ></div>
-              <input type="range" min="0" :max="currentSong.duration" :value="currentTime" @input="seekbarSeeking" @change="seekbarChange" class="seekbar-input" ref="seekBar">
+              <input type="range" min="0" :max="currentSong.duration" :value="currentTime" @input="seekbarProgressSeeking" @change="seekbarProgressChange" class="common-seekbar seekbar-input" ref="seekBar">
             </div>
 
 
@@ -71,7 +99,7 @@
       </div>
     </transition>
 
-    <audio ref="audio" :src="currentSongSrc" @timeupdate="timeUpdate" @ended="musicEnd"></audio>
+    <audio ref="audio" :src="currentSongSrc" @timeupdate="timeUpdate" @ended="musicEnd" @pause="togglePlaying(true)"></audio>
 
   </div>
 </template>
@@ -83,6 +111,7 @@
   import {playMode} from "../assets/js/common"
   import {shuffleArray} from "../assets/js/utils"
   import {Base64} from 'js-base64'
+  import LyricParser from 'lyric-parser'
 
   export default {
     components: {
@@ -103,7 +132,11 @@
         currentSongSrc: '',
         currentTime: 0,
         seeking: false,
-        lyric: ''
+        showLyric: false,
+        lyricArr: {
+          lines: []
+        },
+        audioVolume: 90
       }
     },
     computed: {
@@ -145,7 +178,8 @@
         })
 
         getLyric(nv.mid).then((res)=> {
-          this.lyric = Base64.decode(res.lyric)
+          let lyricTxt = Base64.decode(res.lyric)
+          this.lyricArr = new LyricParser(lyricTxt, this.handleLyric)
         }).catch((e) => {
           console.log('获取歌词失败', e)
         })
@@ -194,6 +228,10 @@
       addFavourite() {
         this.$toast('❤')
       },
+      /**
+       * 切换播放与暂停
+       * @param playing 为true时暂停，反之播放
+       */
       togglePlaying(playing = this.player.playing) {
 
         if (playing) {
@@ -250,15 +288,20 @@
           this.nextSong()
         }
       },
-      seekbarSeeking(e) {
+      seekbarProgressSeeking(e) {
         this.seeking = true
         this.currentTime = e.target.value
       },
-      seekbarChange(e) {
+      seekbarProgressChange(e) {
         this.seeking = false
         this.$refs.audio.currentTime = e.target.value
         this.togglePlaying(false)
       },
+      seekbarVolumeSeeking(e) {
+        this.audioVolume = e.target.value
+        this.$refs.audio.volume = e.target.value/100
+      },
+
       togglePlayMode() {
         const mode = (this.player.mode + 1) % 3
         this.$store.commit('updatePlayer', {
@@ -313,6 +356,10 @@
         a.target = '_blank'
         a.click();
         window.URL.revokeObjectURL(src);
+      },
+      // 歌词回调
+      handleLyric({lineNum, txt}) {
+        console.log(lineNum, txt)
       }
     }
   }
@@ -320,6 +367,33 @@
 
 <style lang="stylus" scoped>
   @import "../assets/css/theme.styl"
+.common-seekbar-box
+  width 100%
+  height 50px
+  display flex
+  align-items center
+  position: relative
+  .csb--fill
+    position: absolute
+    top 50%
+    transform translateY(-50%)
+    height 5px
+    width 0
+    background #fff
+    user-select none
+    pointer-events none
+    z-index -1
+.common-seekbar
+  width 100%
+  height 5px
+  background rgba(255, 255, 255, 0.25)
+  appearance: none;
+  &::-webkit-slider-thumb
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background #fff
 
 .view-player
   .fullscreen-player
@@ -346,43 +420,82 @@
         width 100%
         height 100%
         background rgba(0, 0, 0, 0.3)
-    .cover-box
+    .player-main-box
       position absolute
       z-index -1
       top 70px
       left 0
       width 100%
       bottom 164px
-      display flex
-      align-items center
-      justify-content center
-      .actions
+
+      &>.actions
         position: absolute
         bottom 0
         left 0
         width 100%
         text-align: center
-      .cd-wrap
-        width 70%
-        height 0
-        padding-bottom 70%
-        border-radius 50%
-        background: radial-gradient(ellipse at center, #ffffff 0%, #b8b8b8 47%, #222222 48%, #0a0809 100%)
-        box-shadow 0px 2px 8px 0px rgba(0, 0, 0, 0.5)
-        animation rotate 15s linear infinite
-        &.pause
-          animation-play-state paused
-        &>img
-          position: absolute
-          left: 50%
-          top 50%
-          transform translate(-50%, -50%)
-          font-size 100px
-          color $color-sub-theme
+        &>button
+          background transparent
+          border 1px solid #fff
+          color #fff
+          border-radius 5px
+          padding 2px 5px
+      .cover-box
+        position: absolute
+        top 0
+        left 0
+        width 100%
+        bottom 0
+        display flex
+        align-items center
+        justify-content center
+        .cd-wrap
+          width 70%
+          height 0
+          padding-bottom 70%
           border-radius 50%
-          width 68%
-          height 68%
-          object-fit cover
+          background: radial-gradient(ellipse at center, #ffffff 0%, #b8b8b8 47%, #222222 48%, #0a0809 100%)
+          box-shadow 0px 2px 8px 0px rgba(0, 0, 0, 0.5)
+          animation rotate 15s linear infinite
+          &.pause
+            animation-play-state paused
+          &>img
+            position: absolute
+            left: 50%
+            top 50%
+            transform translate(-50%, -50%)
+            font-size 100px
+            color $color-sub-theme
+            border-radius 50%
+            width 68%
+            height 68%
+            object-fit cover
+      .lyric-wrap
+        position: absolute
+        top 0
+        left 2%
+        width 96%
+        bottom 0
+        color: #fff
+        .volume-wrap
+          width 86%
+          margin 0 auto
+          display flex
+          flex-direction row
+          align-items center
+          .vw--title
+            width 20%
+        .lrc-main
+          position: absolute
+          top: 50px
+          left 0
+          width 100%
+          bottom 35px
+          overflow: auto
+          text-align: center
+          &>li
+            font-size 14px
+            line-height: 2
     .control-box
       position: absolute
       bottom 10px
@@ -400,34 +513,9 @@
         align-items center
         justify-content space-between
         padding 0 20px
-        .seekbar-box
+        .common-seekbar-box
           width 75%
           height 100%
-          display flex
-          align-items center
-          position: relative
-
-          .fill
-            position: absolute
-            top 50%
-            transform translateY(-50%)
-            height 5px
-            width 0
-            background #fff
-            user-select none
-            pointer-events none
-            z-index -1
-          .seekbar-input
-            width 100%
-            height 5px
-            background rgba(255, 255, 255, 0.25)
-            appearance: none;
-            &::-webkit-slider-thumb
-              appearance: none;
-              width: 20px;
-              height: 20px;
-              border-radius: 50%;
-              background #fff
         .time-start, .time-end
           width 10%
           text-align: center

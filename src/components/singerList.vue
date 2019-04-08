@@ -206,9 +206,9 @@
     transform translateY(-50%)
     padding-right: 1px
     &>li
-      width 15px
-      height 15px
-      line-height: 1.3
+      width 21px
+      height 21px
+      line-height: 23px
       text-align center
       border-radius 50%
       font-size 12px
