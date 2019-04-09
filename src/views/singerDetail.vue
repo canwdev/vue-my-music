@@ -8,6 +8,7 @@
   import {getSingerDetail} from "../api/singer"
   import {getSongUrl} from "../api/song"
   import {createSong} from "../assets/js/song"
+  import {allowBodyScroll} from "../assets/js/dom";
 
   export default {
     components: {
@@ -25,10 +26,10 @@
     },
     mounted() {
       this.loadSongList();
-      this.allowBodyScroll(false);
+      allowBodyScroll(false);
     },
     beforeDestroy() {
-      this.allowBodyScroll();
+      allowBodyScroll();
     },
     methods: {
       // 加载歌曲列表
@@ -54,15 +55,6 @@
 
         // console.log(ret)
         return ret;
-      },
-      // 切换窗口滚动
-      allowBodyScroll (yes = true) {
-        let bodyEl = document.body;
-        if (!yes) {
-          bodyEl.style.overflow = 'hidden';
-          return
-        }
-        bodyEl.style.overflow = 'unset';
       },
       // 处理单曲点击事件
       handleSelectSong(song, index) {

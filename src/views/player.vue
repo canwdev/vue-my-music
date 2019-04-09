@@ -112,6 +112,7 @@
   import {shuffleArray} from "../assets/js/utils"
   import {Base64} from 'js-base64'
   import LyricParser from 'lyric-parser'
+  import {allowBodyScroll} from "../assets/js/dom";
 
   export default {
     components: {
@@ -161,6 +162,15 @@
         if (this.currentSongSrc === '') {
           this.togglePlaying(true)
         }
+        allowBodyScroll(nv !== true)
+
+        if (nv===true) {
+          window.addEventListener('popstate', this.backPreviousPage)
+        } else {
+          window.removeEventListener('popstate', this.backPreviousPage)
+          window.history.forward(1);
+        }
+
       },
       currentSong(nv, ov) {
         if (nv.mid === ov.mid) {
@@ -360,6 +370,11 @@
       // 歌词回调
       handleLyric({lineNum, txt}) {
         console.log(lineNum, txt)
+      },
+      backPreviousPage(e) {
+        e.preventDefault()
+        console.log('navigate')
+        this.hide()
       }
     }
   }
