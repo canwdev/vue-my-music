@@ -106,7 +106,8 @@
       overflow: hidden
     .subtitle
       position: absolute
-      bottom -10px
+      // bottom -10px
+      text-align center
       left 50%
       transform translateX(-50%)
       width fit-content

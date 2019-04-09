@@ -4,7 +4,7 @@
       <title-bar :title="singer.name" :transparent="!titleBarBg" :fixed="true"></title-bar>
       <div class="cover-box" ref="coverBox">
         <img :src="singer.avatar">
-        <a href="javascript:" class="btn-random-play" v-show="!titleBarBg"><span class="icon iconfont icon-shuffle"></span> 随机播放</a>
+        <a href="javascript:" class="btn-random-play" v-show="!titleBarBg" @click="selectSong(songs[0], 0, true)"><span class="icon iconfont icon-shuffle"></span> 随机播放</a>
       </div>
 
       <loading v-show="!songs.length"></loading>
@@ -65,8 +65,8 @@
           this.titleBarBg = top >= coverHeight
         })
       },
-      selectSong(song, index) {
-        this.$emit('selectSong', song, index)
+      selectSong(song, index, shufftle) {
+        this.$emit('selectSong', song, index, shufftle)
       }
     }
   }
@@ -97,6 +97,9 @@
           color: #747474
           font-size $font-s
           line-height: $font-m
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          overflow: hidden;
       &>li+li
         border-top 1px solid $color-bg-dark
     .cover-box

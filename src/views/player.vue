@@ -36,8 +36,8 @@
                 </div>
               </div>
 
-              <ul class="lrc-main">
-                <li v-if="lyricArr"
+              <ul class="lrc-main" v-if="lyricArr">
+                <li
                   v-for="(v,i) in lyricArr.lines"
                   :key="i"
                 >{{ v.txt }}</li>
@@ -113,6 +113,7 @@
   import {Base64} from 'js-base64'
   import LyricParser from 'lyric-parser'
   import {allowBodyScroll} from "../assets/js/dom";
+  import storage from 'good-storage'
 
   export default {
     components: {
@@ -223,6 +224,12 @@
           }
         }
       })
+
+      // load set volume
+      let vol = storage.get('audioVolume', 95)
+      console.log(vol)
+      this.audioVolume = vol
+      this.$refs.audio.volume = vol/100
     },
     methods: {
       show() {
@@ -310,6 +317,7 @@
       seekbarVolumeSeeking(e) {
         this.audioVolume = e.target.value
         this.$refs.audio.volume = e.target.value/100
+        storage.set('audioVolume', e.target.value)
       },
 
       togglePlayMode() {
@@ -588,12 +596,16 @@
       display flex
       justify-content center
       flex-direction column
+      width 50%
       .title
         font-weight: bold
         font-size $font-l
         line-height $font-xl
       .subtitle
         font-size $font-m
+        text-overflow ellipsis
+        white-space nowrap
+        overflow hidden
     .control-box
       &>a
         box-sizing border-box
