@@ -32,15 +32,19 @@
                   <div class="csb--fill"
                        :style="'width: '+(audioVolume/100)*100+'%'"
                   ></div>
-                  <input type="range" min="0" max="100" :value="audioVolume" @input="seekbarVolumeSeeking" class="common-seekbar seekbar-input" ref="seekBar">
+                  <input type="range" min="0" max="100" :value="audioVolume" @input="seekbarVolumeSeeking"
+                         class="common-seekbar seekbar-input" ref="seekBar">
                 </div>
               </div>
 
-              <ul class="lrc-main" v-if="lyricArr">
+              <ul class="lrc-main" v-if="lyricObj" ref="lyricWrap">
                 <li
-                  v-for="(v,i) in lyricArr.lines"
-                  :key="i"
-                >{{ v.txt }}</li>
+                    ref="lyricEls"
+                    :class="{active: lyricCurrentLine===i}"
+                    v-for="(v,i) in lyricObj.lines"
+                    :key="i"
+                >{{ v.txt }}
+                </li>
               </ul>
             </div>
           </transition>
@@ -57,7 +61,9 @@
               <div class="csb--fill"
                    :style="'width: '+(currentTime/currentSong.duration)*100+'%'"
               ></div>
-              <input type="range" min="0" :max="currentSong.duration" :value="currentTime" @input="seekbarProgressSeeking" @change="seekbarProgressChange" class="common-seekbar seekbar-input" ref="seekBar">
+              <input type="range" min="0" :max="currentSong.duration" :value="currentTime"
+                     @input="seekbarProgressSeeking" @change="seekbarProgressChange"
+                     class="common-seekbar seekbar-input" ref="seekBar">
             </div>
 
 
@@ -93,13 +99,15 @@
           <div class="subtitle">{{currentSong.singer}}</div>
         </div>
         <div class="control-box">
-          <a class="play iconfont" :class="{'icon-play-arrow': !player.playing, 'icon-pause': player.playing}" @click.prevent="togglePlaying()"></a>
+          <a class="play iconfont" :class="{'icon-play-arrow': !player.playing, 'icon-pause': player.playing}"
+             @click.prevent="togglePlaying()"></a>
           <a class="list iconfont icon-queue-muspx" @click="openPlayList"></a>
         </div>
       </div>
     </transition>
 
-    <audio ref="audio" :src="currentSongSrc" @timeupdate="timeUpdate" @ended="musicEnd" @pause="togglePlaying(true)"></audio>
+    <audio ref="audio" :src="currentSongSrc" @timeupdate="timeUpdate" @ended="musicEnd" @pause="togglePlaying(true)"
+           @play="togglePlaying(false)"></audio>
 
   </div>
 </template>
@@ -114,6 +122,7 @@
   import LyricParser from 'lyric-parser'
   import {allowBodyScroll} from "../assets/js/dom";
   import storage from 'good-storage'
+  import {scrollTo} from "../assets/js/scroll-to-anywhere"
 
   export default {
     components: {
@@ -135,9 +144,11 @@
         currentTime: 0,
         seeking: false,
         showLyric: false,
-        lyricArr: {
+        lyricObj: {
           lines: []
         },
+        lyricEls: [],
+        lyricCurrentLine: 0,
         audioVolume: 90
       }
     },
@@ -165,11 +176,12 @@
         }
         allowBodyScroll(nv !== true)
 
-        if (nv===true) {
+        if (nv === true) {
+          history.pushState(null, null, '/');
           window.addEventListener('popstate', this.backPreviousPage)
         } else {
           window.removeEventListener('popstate', this.backPreviousPage)
-          window.history.forward(1);
+          history.back()
         }
 
       },
@@ -188,11 +200,19 @@
           console.log('获取音乐地址失败', e)
         })
 
-        getLyric(nv.mid).then((res)=> {
+        getLyric(nv.mid).then((res) => {
           let lyricTxt = Base64.decode(res.lyric)
-          this.lyricArr = new LyricParser(lyricTxt, this.handleLyric)
+          this.lyricObj = new LyricParser(lyricTxt, this.handleLyric)
+          this.$nextTick(()=>{
+            this.lyricEls = this.$refs.lyricEls
+          })
+          if (this.player.playing) {
+            this.lyricObj.play()
+          }
         }).catch((e) => {
           console.log('获取歌词失败', e)
+          this.lyricObj = {}
+          this.lyricCurrentLine = 0
         })
       },
       currentSongSrc(nv, ov) {
@@ -227,9 +247,8 @@
 
       // load set volume
       let vol = storage.get('audioVolume', 95)
-      console.log(vol)
       this.audioVolume = vol
-      this.$refs.audio.volume = vol/100
+      this.$refs.audio.volume = vol / 100
     },
     methods: {
       show() {
@@ -316,7 +335,7 @@
       },
       seekbarVolumeSeeking(e) {
         this.audioVolume = e.target.value
-        this.$refs.audio.volume = e.target.value/100
+        this.$refs.audio.volume = e.target.value / 100
         storage.set('audioVolume', e.target.value)
       },
 
@@ -331,7 +350,7 @@
           // 打乱原有播放列表
           let randomList = shuffleArray(this.player.playList)
           // 更新现在播放歌曲的currentIndex
-          let currentIndex = randomList.findIndex((v, i)=>{
+          let currentIndex = randomList.findIndex((v, i) => {
             return (v.mid === this.currentSong.mid)
           })
 
@@ -346,7 +365,7 @@
           // 切换回正常播放模式
           let backupList = this.player.backupList
           if (backupList.length > 0) {
-            let currentIndex = backupList.findIndex((v, i)=>{
+            let currentIndex = backupList.findIndex((v, i) => {
               return (v.mid === this.currentSong.mid)
             })
 
@@ -378,10 +397,15 @@
       // 歌词回调
       handleLyric({lineNum, txt}) {
         console.log(lineNum, txt)
+        this.lyricCurrentLine = lineNum
+
+        if (this.lyricEls.length > 0) {
+          scrollTo(this.lyricEls[lineNum], 1000, {rootEl: this.$refs.lyricWrap, offset: -300})
+        }
       },
       backPreviousPage(e) {
-        e.preventDefault()
-        console.log('navigate')
+        history.pushState(null, null, '/');
+        // console.log('navigate')
         this.hide()
       }
     }
@@ -517,8 +541,13 @@
           overflow: auto
           text-align: center
           &>li
+            opacity 0.5
             font-size 14px
             line-height: 2
+            transition all 1s
+            &.active
+              opacity 1
+              font-size 16px
     .control-box
       position: absolute
       bottom 10px
