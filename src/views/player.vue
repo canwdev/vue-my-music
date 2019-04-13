@@ -24,33 +24,47 @@
           </transition>
 
           <transition name="fade">
-            <div class="lyric-wrap" v-show="showLyric" @click="showLyric = false">
+            <div class="lyric-box" v-show="showLyric" @click="showLyric = false">
 
               <div class="volume-wrap">
-                <p class="vw--title">音量</p>
+                <p class="vw--title">
+                  <span class="iconfont" :class="{
+                    'icon-volume-up': audioVolume>50,
+                    'icon-volume-down': audioVolume<50,
+                    'icon-volume-mute': audioVolume<10,
+                    'icon-volume-off': audioVolume==0
+                  }"></span>
+                </p>
                 <div class="common-seekbar-box">
                   <div class="csb--fill"
-                       :style="'width: '+(audioVolume/100)*100+'%'"
+                       :style="'width:'+audioVolume+'%'"
                   ></div>
                   <input type="range" min="0" max="100" :value="audioVolume" @input="seekbarVolumeSeeking"
                          class="common-seekbar seekbar-input" ref="seekBar">
                 </div>
               </div>
 
-              <ul class="lrc-main" v-if="lyricObj" ref="lyricWrap">
-                <li
-                    ref="lyricEls"
-                    :class="{active: lyricCurrentLine===i}"
-                    v-for="(v,i) in lyricObj.lines"
-                    :key="i"
-                >{{ v.txt }}
-                </li>
-              </ul>
+              <div ref="lyricWrap">
+                <ul class="lrc-main" v-if="lyricObj && lyricObj.lines>0">
+                  <li
+                      ref="lyricEls"
+                      :class="{active: lyricCurrentLine===i}"
+                      v-for="(v,i) in lyricObj.lines"
+                      :key="i"
+                  >{{ v.txt }}
+                  </li>
+                </ul>
+                <div class="lrc-main no-lyric" v-else>
+                  没有歌词，请欣赏
+                </div>
+              </div>
+
             </div>
           </transition>
 
           <div class="actions">
-            <button @click="downloadSong">下载</button>
+            <button class="iconfont icon-file-download" @click="downloadSong">
+            </button>
           </div>
         </div>
 
@@ -78,7 +92,7 @@
             <a class="previous iconfont icon-skip-previous" @click="previousSong"></a>
 
             <a class="playpause iconfont"
-               :class="{'icon-play-arrow': !player.playing, 'icon-pause': player.playing}"
+               :class="{'icon-play-circle-filled': !player.playing, 'icon-pause-circle-filled': player.playing}"
                @click="togglePlaying()"></a>
 
             <a class="next iconfont icon-skip-next" @click="nextSong"></a>
@@ -99,7 +113,7 @@
           <div class="subtitle">{{currentSong.singer}}</div>
         </div>
         <div class="control-box">
-          <a class="play iconfont" :class="{'icon-play-arrow': !player.playing, 'icon-pause': player.playing}"
+          <a class="play iconfont" :class="{'icon-play-circle-outline': !player.playing, 'icon-pause-circle-outline': player.playing}"
              @click.prevent="togglePlaying()"></a>
           <a class="list iconfont icon-queue-muspx" @click="openPlayList"></a>
         </div>
@@ -118,6 +132,7 @@
   import {getSongUrl, getLyric} from "../api/song"
   import {playMode} from "../assets/js/common"
   import {shuffleArray} from "../assets/js/utils"
+  import underscore from '../assets/js/underscore-simple.js'
   import {Base64} from 'js-base64'
   import LyricParser from 'lyric-parser'
   import {allowBodyScroll} from "../assets/js/dom";
@@ -130,9 +145,10 @@
     },
     data() {
       return {
+        currentPath: '/', // 用来控制返回键
         customBack: {
           custom: true,
-          text: `<span class="icon iconfont icon-details"></span>`,
+          text: `<span class="icon iconfont icon-keyboard-arrow-down" style="font-size: 30px;"></span>`,
           action: this.hide
         },
         customAction: {
@@ -143,13 +159,14 @@
         currentSongSrc: '',
         currentTime: 0,
         seeking: false,
+        seekLimiter: null,
         showLyric: false,
         lyricObj: {
           lines: []
         },
         lyricEls: [],
         lyricCurrentLine: 0,
-        audioVolume: 90
+        audioVolume: 90,
       }
     },
     computed: {
@@ -176,8 +193,9 @@
         }
         allowBodyScroll(nv !== true)
 
+        // 解决返回键问题
         if (nv === true) {
-          history.pushState(null, null, '/');
+          history.pushState(null, null, this.currentPath);
           window.addEventListener('popstate', this.backPreviousPage)
         } else {
           window.removeEventListener('popstate', this.backPreviousPage)
@@ -225,9 +243,10 @@
           this.togglePlaying(true)
         }
 
-      }
+      },
     },
     mounted() {
+      this.currentPath = location.pathname+location.hash
       // 键盘控制
       document.addEventListener('keyup', (e) => {
         if (this.player.fullscreen) {
@@ -308,7 +327,16 @@
       },
       timeUpdate(e) {
         if (!this.seeking) {
-          this.currentTime = e.target.currentTime
+
+          // 节流函数
+          let now = + new Date()
+          if (now - this.seekLimiter > 500 || !this.seekLimiter) {
+
+            this.currentTime = e.target.currentTime
+
+            this.seekLimiter = now
+          }
+
         }
       },
       formatTime(interval) {
@@ -396,15 +424,17 @@
       },
       // 歌词回调
       handleLyric({lineNum, txt}) {
-        console.log(lineNum, txt)
         this.lyricCurrentLine = lineNum
 
-        if (this.lyricEls.length > 0) {
-          scrollTo(this.lyricEls[lineNum], 1000, {rootEl: this.$refs.lyricWrap, offset: -300})
+        let lycWrapEl = this.$refs.lyricWrap
+        const offset = -(lycWrapEl.clientHeight/2+lycWrapEl.getBoundingClientRect().y)
+
+        if (this.lyricEls && this.lyricEls.length > 0) {
+          scrollTo(this.lyricEls[lineNum], 1000, {rootEl: lycWrapEl, offset})
         }
       },
       backPreviousPage(e) {
-        history.pushState(null, null, '/');
+        history.pushState(null, null, this.currentPath);
         // console.log('navigate')
         this.hide()
       }
@@ -483,10 +513,10 @@
         text-align: center
         &>button
           background transparent
-          border 1px solid #fff
+          border none
           color #fff
-          border-radius 5px
-          padding 2px 5px
+          padding 0
+          font-size 20px
       .cover-box
         position: absolute
         top 0
@@ -517,7 +547,7 @@
             width 68%
             height 68%
             object-fit cover
-      .lyric-wrap
+      .lyric-box
         position: absolute
         top 0
         left 2%
@@ -532,6 +562,9 @@
           align-items center
           .vw--title
             width 20%
+            text-align: center
+            &>.iconfont
+              font-size 25px
         .lrc-main
           position: absolute
           top: 50px
@@ -540,11 +573,16 @@
           bottom 35px
           overflow: auto
           text-align: center
+          &.no-lyric
+            display flex
+            align-items center
+            justify-content center
           &>li
             opacity 0.5
             font-size 14px
-            line-height: 2
+            line-height 20px
             transition all 1s
+            padding: 5px 0
             &.active
               opacity 1
               font-size 16px

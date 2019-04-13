@@ -34,7 +34,7 @@
       // 顶部导航滚动优化
       _scrollOptimization () {
         window.addEventListener('scroll', (e) => {
-          // 节流函数
+          // 防抖函数
           if (this.scrollLimiter) {
             clearTimeout(this.scrollLimiter)
           }
